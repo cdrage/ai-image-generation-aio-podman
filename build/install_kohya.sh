@@ -18,7 +18,7 @@ pip3 install --no-cache-dir torch==${KOHYA_TORCH_VERSION} torchvision torchaudio
 pip3 install --no-cache-dir xformers==${KOHYA_XFORMERS_VERSION} --index-url ${INDEX_URL}
 
 # Install some additional Python modules
-pip3 install bitsandbytes==0.43.0 \
+pip3 install bitsandbytes==0.43.1 \
     tensorboard==2.14.1 tensorflow==2.14.0 \
     wheel packaging tensorrt
 pip3 install tensorflow[and-cuda]
