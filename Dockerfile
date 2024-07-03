@@ -1,5 +1,7 @@
+
+# Stage 1: Base Image
 ARG BASE_IMAGE
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS base
 
 RUN mkdir -p /sd-models
 
@@ -14,11 +16,10 @@ RUN mkdir -p /sd-models
 #COPY sd_xl_refiner_1.0.safetensors /sd-models/sd_xl_refiner_1.0.safetensors
 #COPY sdxl_vae.safetensors /sd-models/sdxl_vae.safetensors
 
-# Copy the build scripts
 WORKDIR /
-COPY --chmod=755 build/* ./
 
-# Install A1111 Web UI
+# Stage 2: A1111 Installation
+FROM base AS a1111-install
 ARG WEBUI_VERSION
 ARG TORCH_VERSION
 ARG XFORMERS_VERSION
@@ -26,12 +27,23 @@ ARG INDEX_URL
 ARG CONTROLNET_COMMIT
 ARG CIVITAI_BROWSER_PLUS_VERSION
 ARG DREAMBOOTH_COMMIT
-RUN /install_a1111.sh
+COPY --chmod=755 build/install_a1111.sh ./
+RUN /install_a1111.sh && rm /install_a1111.sh
 
 # Cache the Stable Diffusion Models
 # SDXL models result in OOM kills with 8GB system memory, need 30GB+ to cache these
 WORKDIR /stable-diffusion-webui
 COPY a1111/cache-sd-model.py ./
+
+# Cache Base Model
+RUN source /venv/bin/activate && \
+    python3 cache-sd-model.py --skip-torch-cuda-test --use-cpu=all --ckpt /sd-models/sd_xl_base_1.0.safetensors && \
+    deactivate
+
+# Cache Refiner Model
+RUN source /venv/bin/activate && \
+    python3 cache-sd-model.py --skip-torch-cuda-test --use-cpu=all --ckpt /sd-models/sd_xl_refiner_1.0.safetensors && \
+    deactivate
 
 # UNCOMMENT TO DO CACHE (if have over 32GB+ RAM)
 #RUN source /venv/bin/activate && \
@@ -46,44 +58,62 @@ COPY a1111/relauncher.py a1111/webui-user.sh a1111/config.json a1111/ui-config.j
 # ADD SDXL styles.csv
 ADD https://raw.githubusercontent.com/Douleb/SDXL-750-Styles-GPT4-/main/styles.csv /stable-diffusion-webui/styles.csv
 
-# Install ComfyUI
+# Stage 3: ComfyUI Installation
+FROM a1111-install AS comfyui-install
 ARG COMFYUI_COMMIT
-RUN /install_comfyui.sh
+WORKDIR /
+COPY --chmod=755 build/install_comfyui.sh ./
+RUN /install_comfyui.sh && rm /install_comfyui.sh
 
 # Copy ComfyUI Extra Model Paths (to share models with A1111)
 COPY comfyui/extra_model_paths.yaml /ComfyUI/
 
-# Install InvokeAI
+# Stage 4: InvokeAI Installation
+FROM comfyui-install AS invokeai-install
 ARG INVOKEAI_VERSION
-RUN /install_invokeai.sh
+WORKDIR /
+COPY --chmod=755 build/install_invokeai.sh ./
+RUN /install_invokeai.sh && rm /install_invokeai.sh
 
 # Copy InvokeAI config file
 COPY invokeai/invokeai.yaml /InvokeAI/
 
-# Install Kohya_ss
+# Stage 5: Kohya_ss Installation
+FROM invokeai-install AS kohya-install
 ARG KOHYA_VERSION
 ARG KOHYA_TORCH_VERSION
 ARG KOHYA_XFORMERS_VERSION
+WORKDIR /
 COPY kohya_ss/requirements* ./
-RUN /install_kohya.sh
+COPY --chmod=755 build/install_kohya.sh ./
+RUN /install_kohya.sh && rm /install_kohya.sh
 
 # Copy the accelerate configuration
 COPY kohya_ss/accelerate.yaml ./
 
-# Install Tensorboard
-RUN /install_tensorboard.sh
+# Stage 6: Tensorboard Installation
+FROM kohya-install AS tensorboard-install
+WORKDIR /
+COPY --chmod=755 build/install_tensorboard.sh ./
+RUN /install_tensorboard.sh && rm /install_tensorboard.sh
 
-# Install Application Manager
+# Stage 7: Application Manager Installation
+FROM tensorboard-install AS appmanager-install
 ARG APP_MANAGER_VERSION
-RUN /install_app_manager.sh
+WORKDIR /
+COPY --chmod=755 build/install_app_manager.sh ./
+RUN /install_app_manager.sh && rm /install_app_manager.sh
 COPY app-manager/config.json /app-manager/public/config.json
 
-# Install CivitAI Model Downloader
+# Stage 8: CivitAI Model Downloader Installation
+FROM appmanager-install AS civitai-dl-install
 ARG CIVITAI_DOWNLOADER_VERSION
-RUN /install_civitai_model_downloader.sh
+WORKDIR /
+COPY --chmod=755 build/install_civitai_model_downloader.sh ./
+RUN /install_civitai_model_downloader.sh && rm /install_civitai_model_downloader.sh
 
-# Cleanup installation scripts
-RUN rm -f /install_*.sh
+# Stage 9: Finalise Image
+FROM civitai-dl-install AS final
 
 # Remove existing SSH host keys
 RUN rm -f /etc/ssh/ssh_host_*

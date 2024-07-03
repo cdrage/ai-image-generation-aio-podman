@@ -43,6 +43,7 @@ podman run -d \
   -p 3010:3011 \
   -p 3020:3021 \
   -p 6006:6066 \
+  -p 7777:7777 \
   -p 8000:8000 \
   -p 8888:8888 \
   -p 9090:9090 \
@@ -58,9 +59,7 @@ podman run -d \
 | 3020         | 3021          | ComfyUI                       |
 | 9090         | 9090          | InvokeAI                      |
 | 6006         | 6066          | Tensorboard                   |
+| 7777         | 7777          | Code Server                   |
 | 8000         | 8000          | Application Manager           |
 | 8888         | 8888          | Jupyter Lab                   |
 | 2999         | 2999          | RunPod File Uploader          |
-
-
-See more information on https://github.com/ashleykleynhans/stable-diffusion-docker on what the ports actually do. TLDR; file manager is at `:8888`, rest are AI interfaces.
