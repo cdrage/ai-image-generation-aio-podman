@@ -3,12 +3,13 @@
 
 Fork of https://github.com/ashleykleynhans/stable-diffusion-docker but instead we are using podman
 
+
 ## Important notes
 
+* Kohya removed due to instability / issues. Use OneTrainer / something else instead.
 * Only works with NVIDIA
 * There are packaged models which are COMMENTED OUT. This reduces the size (it is already a 30GB+ image)
 * UI will load with the **DEFAULT** stable diffusion model, look online for others to download
-* 
 
 ## Building:
 
@@ -40,7 +41,6 @@ podman run -d \
   -v /workspace \
   -p 2999:2999 \
   -p 3000:3001 \
-  -p 3010:3011 \
   -p 3020:3021 \
   -p 6006:6066 \
   -p 7777:7777 \
@@ -55,7 +55,6 @@ podman run -d \
 | Connect Port | Internal Port | Description                   |
 |--------------|---------------|-------------------------------|
 | 3000         | 3001          | A1111 Stable Diffusion Web UI |
-| 3010         | 3011          | Kohya_ss                      |
 | 3020         | 3021          | ComfyUI                       |
 | 9090         | 9090          | InvokeAI                      |
 | 6006         | 6066          | Tensorboard                   |

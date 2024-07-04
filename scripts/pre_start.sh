@@ -29,10 +29,6 @@ sync_apps() {
         echo "Syncing ${APP} to workspace, please wait..."
         rsync_with_progress --remove-source-files /${APP}/ /workspace/${APP}/
 
-        # Sync Kohya_ss to workspace to support Network volumes
-        echo "Syncing Kohya_ss to workspace, please wait..."
-        rsync_with_progress --remove-source-files /kohya_ss/ /workspace/kohya_ss/
-
         # Sync ComfyUI to workspace to support Network volumes
         echo "Syncing ComfyUI to workspace, please wait..."
         rsync_with_progress --remove-source-files /ComfyUI/ /workspace/ComfyUI/
@@ -105,10 +101,6 @@ then
     echo "   ---------------------------------------------"
     echo "   /start_a1111.sh"
     echo ""
-    echo "   Kohya_ss"
-    echo "   ---------------------------------------------"
-    echo "   /start_kohya.sh"
-    echo ""
     echo "   ComfyUI"
     echo "   ---------------------------------------------"
     echo "   /start_comfyui.sh"
@@ -118,7 +110,6 @@ then
     echo "   /start_invokeai.sh"
 else
     /start_a1111.sh
-    /start_kohya.sh
     /start_comfyui.sh
     /start_invokeai.sh
 fi

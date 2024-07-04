@@ -80,22 +80,8 @@ RUN /install_invokeai.sh && rm /install_invokeai.sh
 # Copy InvokeAI config file
 COPY invokeai/invokeai.yaml /InvokeAI/
 
-# Stage 5: Kohya_ss Installation
-FROM invokeai-install AS kohya-install
-ARG KOHYA_VERSION
-ARG KOHYA_TORCH_VERSION
-ARG KOHYA_XFORMERS_VERSION
-ARG INDEX_URL
-WORKDIR /
-COPY kohya_ss/requirements* ./
-COPY --chmod=755 build/install_kohya.sh ./
-RUN /install_kohya.sh && rm /install_kohya.sh
-
-# Copy the accelerate configuration
-COPY kohya_ss/accelerate.yaml ./
-
 # Stage 6: Tensorboard Installation
-FROM kohya-install AS tensorboard-install
+FROM invokeai-install AS tensorboard-install
 ARG INDEX_URL
 WORKDIR /
 COPY --chmod=755 build/install_tensorboard.sh ./
