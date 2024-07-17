@@ -14,4 +14,5 @@ pip3 install --no-cache-dir xformers==${XFORMERS_VERSION} --index-url ${INDEX_UR
 
 # Install InvokeAI
 pip3 install InvokeAI[xformers]==${INVOKEAI_VERSION} --use-pep517
+pip3 cache purge
 deactivate

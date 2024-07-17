@@ -21,5 +21,6 @@ pip3 install -r requirements.txt
 git clone https://github.com/ltdrdata/ComfyUI-Manager.git custom_nodes/ComfyUI-Manager
 cd custom_nodes/ComfyUI-Manager
 pip3 install -r requirements.txt
+pip3 install accelerate
 pip3 cache purge
 deactivate
