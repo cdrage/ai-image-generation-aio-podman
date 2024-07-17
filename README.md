@@ -6,6 +6,7 @@ Fork of https://github.com/ashleykleynhans/stable-diffusion-docker but instead w
 
 ## Important notes
 
+* This custom stable diffusion container contains NO SAFETENSORS. Download your own through the webgui / pass it in using jupyter notebook.
 * Kohya removed due to instability / issues. Use OneTrainer / something else instead.
 * Only works with NVIDIA
 * There are packaged models which are COMMENTED OUT. This reduces the size (it is already a 30GB+ image)
@@ -18,16 +19,6 @@ Fork of https://github.com/ashleykleynhans/stable-diffusion-docker but instead w
 # Clone
 git clone git clone https://github.com/cdrage/stable-diffusion-podman.git
 cd stable-diffusion-podman
-
-# (OPTONAL PACKAGED MODELS)
-# These are OPTIONAL. Please EDIT YOUR DOCKERFILE to uncomment the cache and the COPY sections
-# You can also install this AFTER bringing your container up instead if you'd like.
-# this is "nice-to-have" so you can use SDXL, but not necessary.
-wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors
-wget https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
-wget https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
-wget https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors
-wget https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors
 
 # See build-args.env for all environment variables regarding versions / you can customise your own version
 podman build -t stable-diffusion-podman --build-arg-file build-args.env .

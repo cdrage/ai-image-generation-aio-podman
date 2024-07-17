@@ -52,6 +52,8 @@ fix_venvs() {
 
 link_models() {
    # Link models and VAE if they are not already linked
+
+   # Do not bother linking models. ZERO point as we are downloading custom ones.
    if [[ ! -L /workspace/stable-diffusion-webui/models/Stable-diffusion/sd_xl_base_1.0.safetensors ]]; then
        ln -s /sd-models/sd_xl_base_1.0.safetensors /workspace/stable-diffusion-webui/models/Stable-diffusion/sd_xl_base_1.0.safetensors
    fi
@@ -69,7 +71,8 @@ if [ "$(printf '%s\n' "$EXISTING_VERSION" "$TEMPLATE_VERSION" | sort -V | head -
     if [ "$EXISTING_VERSION" != "$TEMPLATE_VERSION" ]; then
         sync_apps
         fix_venvs
-        link_models
+        # do NOT link models.. they will not be downloaded anyways.
+        # link_models
 
         # Add VENV_PATH to webui-user.sh
         sed -i "s|venv_dir=VENV_PATH|venv_dir=${VENV_PATH}\"\"|" /workspace/stable-diffusion-webui/webui-user.sh
