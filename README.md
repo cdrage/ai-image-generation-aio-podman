@@ -6,7 +6,7 @@ Fork of https://github.com/ashleykleynhans/stable-diffusion-docker but instead w
 
 ## Important notes
 
-* This custom stable diffusion container contains NO SAFETENSORS. Download your own through the webgui / pass it in using jupyter notebook.
+* This custom stable diffusion container contains NO SAFETENSORS. Download your own through the webgui / pass it in using jupyter notebook. This is because it REDUCES the image size. Remember this!
 * Kohya removed due to instability / issues. Use OneTrainer / something else instead.
 * Only works with NVIDIA
 * There are packaged models which are COMMENTED OUT. This reduces the size (it is already a 30GB+ image)
@@ -40,7 +40,7 @@ podman run -d \
   -p 9090:9090 \
   -e JUPYTER_PASSWORD=Jup1t3R! \
   -e ENABLE_TENSORBOARD=1 \
-  ashleykza/stable-diffusion-webui:latest
+  stable-diffusion-podman
 ```
 
 | Connect Port | Internal Port | Description                   |

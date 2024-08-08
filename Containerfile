@@ -89,7 +89,6 @@ RUN /install_tensorboard.sh && rm /install_tensorboard.sh
 
 # Stage 7: Application Manager Installation
 FROM tensorboard-install AS appmanager-install
-ARG APP_MANAGER_VERSION
 ARG INDEX_URL
 WORKDIR /
 COPY --chmod=755 build/install_app_manager.sh ./
