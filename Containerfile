@@ -96,6 +96,8 @@ RUN /install_app_manager.sh && rm /install_app_manager.sh
 COPY app-manager/config.json /app-manager/public/config.json
 
 # Stage 8: CivitAI Model Downloader Installation
+# This provides a way to download models from CivitAI and cache them from within 
+# stablediffusion UI
 FROM appmanager-install AS civitai-dl-install
 ARG CIVITAI_DOWNLOADER_VERSION
 ARG INDEX_URL
@@ -106,7 +108,7 @@ RUN /install_civitai_model_downloader.sh && rm /install_civitai_model_downloader
 # Stage 9: Finalise Image
 FROM civitai-dl-install AS final
 
-# Remove existing SSH host keys
+# Remove any existing SSH host keys
 RUN rm -f /etc/ssh/ssh_host_*
 
 # NGINX Proxy
