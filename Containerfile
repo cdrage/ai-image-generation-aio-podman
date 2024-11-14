@@ -57,7 +57,6 @@ RUN rm -f /etc/ssh/ssh_host_*
 # Make sure TQDM is installed
 RUN pip install tqdm
 
-
 # Below is stable diffusion stuff
 
 RUN mkdir -p /sd-models
