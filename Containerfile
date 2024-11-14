@@ -3,11 +3,68 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS base
 
+# Install system dependencies for stable diffusion models to work...
+
+ARG TORCH
+ARG PYTHON_VERSION
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+ENV SHELL=/bin/bash
+
+WORKDIR /
+
+# Create workspace directory
+RUN mkdir /workspace
+
+# Install python versioning / torch
+RUN apt-get update --yes && \
+    apt-get upgrade --yes && \
+    apt install --yes --no-install-recommends git wget curl bash libgl1 software-properties-common nginx && \
+    if [ -n "${PYTHON_VERSION}" ]; then \
+        add-apt-repository ppa:deadsnakes/ppa && \
+        apt install "python${PYTHON_VERSION}-dev" "python${PYTHON_VERSION}-venv" -y --no-install-recommends; \
+    fi && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+
+# If python installed, make sure we are using that verison.
+RUN if [ -n "${PYTHON_VERSION}" ]; then \
+        ln -s /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
+        rm /usr/bin/python3 && \
+        ln -s /usr/bin/python${PYTHON_VERSION} /usr/bin/python3 && \
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+        python get-pip.py; \
+    fi
+
+
+RUN pip install --upgrade --no-cache-dir pip
+
+# Install PyTorch only if TORCH is specified
+RUN if [ -n "${TORCH}" ]; then pip install --upgrade --no-cache-dir ${TORCH}; fi 
+RUN pip install --upgrade --no-cache-dir jupyterlab ipywidgets jupyter-archive jupyter_contrib_nbextensions
+
+# Install jlab
+RUN pip install jupyterlab
+
+# Install filebrowser for jlab
+RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash;
+
+# Remove ANY possible existing SSH host keys for security
+RUN rm -f /etc/ssh/ssh_host_*
+
+# Make sure TQDM is installed
+RUN pip install tqdm
+
+
+# Below is stable diffusion stuff
+
 RUN mkdir -p /sd-models
 
-# UNCOMMENT TO DO CACHE (if have over 32GB+ RAM)
-# See README for more finromation.
-# Add SDXL models and VAE
+
+# You can uncomment the below lines add "package" a model / lora etc. baked into the image, this is just an example. 
+#
 # These need to already have been downloaded:
 #   wget https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
 #   wget https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors
@@ -16,7 +73,6 @@ RUN mkdir -p /sd-models
 #COPY sd_xl_refiner_1.0.safetensors /sd-models/sd_xl_refiner_1.0.safetensors
 #COPY sdxl_vae.safetensors /sd-models/sdxl_vae.safetensors
 
-WORKDIR /
 
 # Stage 2: A1111 Installation
 FROM base AS a1111-install
@@ -24,9 +80,7 @@ ARG WEBUI_VERSION
 ARG TORCH_VERSION
 ARG XFORMERS_VERSION
 ARG INDEX_URL
-ARG CONTROLNET_COMMIT
 ARG CIVITAI_BROWSER_PLUS_VERSION
-ARG DREAMBOOTH_COMMIT
 COPY --chmod=755 build/install_a1111.sh ./
 RUN /install_a1111.sh && rm /install_a1111.sh
 
@@ -80,33 +134,16 @@ RUN /install_invokeai.sh && rm /install_invokeai.sh
 # Copy InvokeAI config file
 COPY invokeai/invokeai.yaml /InvokeAI/
 
-# Stage 6: Tensorboard Installation
-FROM invokeai-install AS tensorboard-install
-ARG INDEX_URL
-WORKDIR /
-COPY --chmod=755 build/install_tensorboard.sh ./
-RUN /install_tensorboard.sh && rm /install_tensorboard.sh
-
-# Stage 7: Application Manager Installation
-FROM tensorboard-install AS appmanager-install
+# Stage 6: Application Manager Installation
+FROM invokeai-install AS appmanager-install
 ARG INDEX_URL
 WORKDIR /
 COPY --chmod=755 build/install_app_manager.sh ./
 RUN /install_app_manager.sh && rm /install_app_manager.sh
 COPY app-manager/config.json /app-manager/public/config.json
 
-# Stage 8: CivitAI Model Downloader Installation
-# This provides a way to download models from CivitAI and cache them from within 
-# stablediffusion UI
-FROM appmanager-install AS civitai-dl-install
-ARG CIVITAI_DOWNLOADER_VERSION
-ARG INDEX_URL
-WORKDIR /
-COPY --chmod=755 build/install_civitai_model_downloader.sh ./
-RUN /install_civitai_model_downloader.sh && rm /install_civitai_model_downloader.sh
-
-# Stage 9: Finalise Image
-FROM civitai-dl-install AS final
+# Stage 7: Finalise Image
+FROM appmanager-install AS final
 
 # Remove any existing SSH host keys
 RUN rm -f /etc/ssh/ssh_host_*
